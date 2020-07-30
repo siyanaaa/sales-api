@@ -1,4 +1,4 @@
-import {inject} from '@loopback/core';
+import {inject, intercept, Interceptor} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -9,7 +9,8 @@ import {
 } from '@loopback/repository';
 import {
   del, get,
-  getModelSchemaRef, param,
+  getModelSchemaRef,
+  HttpErrors, param,
   patch, post,
   put,
   Request, requestBody, Response, RestBindings
@@ -19,6 +20,25 @@ import {Customer} from '../models';
 import {CustomerRepository} from '../repositories';
 import {FileUploadHandler} from '../types';
 
+const validateCustomer: Interceptor = async (invocationCtx, next) => {
+  console.log('log: before-', invocationCtx.methodName);
+  const customer: Omit<Customer, 'uuid'> = new Customer();
+  if (invocationCtx.methodName === 'create')
+      Object.assign(customer, invocationCtx.args[0]);
+
+  if (customer.age >= 99) {
+      throw new HttpErrors.InternalServerError('Invalid age');
+  }
+
+  const result = await next();
+  return result;
+};
+
+interface Files {
+  data: Customer[],
+}
+
+@intercept(validateCustomer)
 export class SalesController {
   constructor(
     @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
@@ -44,28 +64,34 @@ export class SalesController {
     @requestBody.file()
     request: Request,
     @inject(RestBindings.Http.RESPONSE) response: Response,
-  ): Promise<object> {
+    //): Promise<Customer[]> {
+    //  const resp: Files[] = SalesController.getFilesAndFields(request);
+    //  return this.customerRepository.createAll(resp);
+    //}
+    ): Promise<object> {
     return new Promise<object>((resolve, reject) => {
       this.handler(request, response, (err: unknown) => {
         if (err) reject(err);
         else {
-          resolve(SalesController.getFilesAndFields(request));
+          const resp = SalesController.getFilesAndFields(request);
+          resolve(resp);
         }
       });
     });
   }
 
+
   private static getFilesAndFields(request: Request) {
     const uploadedFiles = request.files;
     const mapper = (f: globalThis.Express.Multer.File) => ({
-      fieldname: f.fieldname,
-      originalname: f.originalname,
-      encoding: f.encoding,
-      mimetype: f.mimetype,
-      size: f.size,
+      // fieldname: f.fieldname,
+      // originalname: f.originalname,
+      // encoding: f.encoding,
+      // mimetype: f.mimetype,
+      // size: f.size,
       data: SalesController.parseCsv(f.buffer.toString().trimEnd().split('\n')),
     });
-    let files: object[] = [];
+    let files: Files[] = [];
     if (Array.isArray(uploadedFiles)) {
       files = uploadedFiles.map(mapper);
     } else {
@@ -73,24 +99,49 @@ export class SalesController {
         files.push(...uploadedFiles[filename].map(mapper));
       }
     }
-    return {files, fields: request.body};
+    //return {files, fields: request.body};
+    return files[0].data;
   }
 
   private static parseCsv(dataArray: string[]) {
-    const rows: object[] = [];
-    const header: string[] = dataArray[0].split(',');
-
+    const rows: Customer[] = [];
     for(let i = 1; i < dataArray.length; i++) {
       const data = dataArray[i].split(',');
-      const obj: {[key: string]: string } = {};
-
-      for(let j = 0; j < data.length; j++) {
-         obj[header[j].trim().toLowerCase()] = data[j].trim();
-      }
-
+      const obj: Omit<Customer, 'uuid'> = new Customer();
+      obj.user_name = data[0].trim();
+      obj.age = parseInt(data[1].trim());
+      obj.height = parseInt(data[2].trim());
+      obj.gender = data[3].trim();
+      obj.sales_amount = parseInt(data[4].trim());
+      obj.last_purchase_date = data[5].trim();
       rows.push(obj);
     }
     return rows;
+  }
+
+  @post('/sales/all', {
+    responses: {
+      '200': {
+        description: 'Customer model instance',
+        content: {'application/json': {schema: getModelSchemaRef(Customer)}},
+      },
+    },
+  })
+  async createAll(
+    @requestBody({
+      content: {
+        'application/json': {
+          type: 'array',
+          items: getModelSchemaRef(Customer, {
+            title: 'NewCustomer',
+            exclude: ['uuid'],
+          }),
+        },
+      },
+    })
+    customer: [Omit<Customer, 'uuid'>],
+  ): Promise<Customer[]> {
+    return this.customerRepository.createAll(customer)
   }
 
   @post('/sales', {
