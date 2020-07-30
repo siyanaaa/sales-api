@@ -1,7 +1,7 @@
-import {DefaultCrudRepository} from '@loopback/repository';
-import {Customer, CustomerRelations} from '../models';
-import {MongoDsDataSource} from '../datasources';
 import {inject} from '@loopback/core';
+import {DefaultCrudRepository} from '@loopback/repository';
+import {MongoDsDataSource} from '../datasources';
+import {Customer, CustomerRelations} from '../models';
 
 export class CustomerRepository extends DefaultCrudRepository<
   Customer,

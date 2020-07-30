@@ -108,6 +108,43 @@ export class SalesController {
     return files[0].data;
   }
 
+  @get('/sales/report/{date}', {
+    responses: {
+      '200': {
+        description: 'Customer model instance, filter by Date YYYY-MM-DD',
+        content: {
+          'application/json': {
+            schema: getModelSchemaRef(Customer, {includeRelations: true}),
+          },
+        },
+      },
+    },
+  })
+  async findByDate(
+    @param.path.string('date') date: string,
+  ): Promise<Customer[]> {
+    return this.customerRepository.find({where: {last_purchase_date: {between: [`${date}T00:00:00`,`${date}T23:59:59`]}}} );
+  }
+
+  @get('/sales/report/{startDate}/{endDate}', {
+    responses: {
+      '200': {
+        description: 'Customer model instance',
+        content: {
+          'application/json': {
+            schema: getModelSchemaRef(Customer, {includeRelations: true}),
+          },
+        },
+      },
+    },
+  })
+  async findByDateRange(
+    @param.path.string('startDate',) startDate: string,
+    @param.path.string('endDate') endDate: string,
+  ): Promise<Customer[]> {
+    return this.customerRepository.find({where: {last_purchase_date: {between: [`${startDate}T00:00:00`,`${endDate}T23:59:59`]}}} );
+  }
+
   @post('/sales/all', {
     responses: {
       '200': {
