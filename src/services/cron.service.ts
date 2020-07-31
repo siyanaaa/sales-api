@@ -9,8 +9,8 @@ export class CronProvider extends CronJob {
     super({
       name: 'job-B',
       onTick: () => {
-        console.log(now);
-        // do something
+        console.log('bonjour, je cours toutes les heures ');
+        // Todo trigger /sales/record
       },
       cronTime: '0 */1 * * *',
       start: true,
