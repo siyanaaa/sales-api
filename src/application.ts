@@ -1,5 +1,6 @@
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
+import {CronComponent} from '@loopback/cron';
 import {RepositoryMixin} from '@loopback/repository';
 import {RestApplication} from '@loopback/rest';
 import {
@@ -11,6 +12,7 @@ import multer from 'multer';
 import path from 'path';
 import {FILE_UPLOAD_SERVICE, STORAGE_DIRECTORY} from './keys';
 import {MySequence} from './sequence';
+import {jobBinding} from './services';
 
 export {ApplicationConfig};
 
@@ -32,6 +34,9 @@ export class SalesApiApplication extends BootMixin(
     });
     this.component(RestExplorerComponent);
 
+    this.component(CronComponent);
+    this.setupCronJob();
+
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here
     this.bootOptions = {
@@ -42,6 +47,10 @@ export class SalesApiApplication extends BootMixin(
         nested: true,
       },
     };
+  }
+
+  protected setupCronJob() {
+    this.add(jobBinding);
   }
 
   protected configureFileUpload(destination?: string) {
