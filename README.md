@@ -6,7 +6,7 @@
 
 ```bash
 docker build -t sales-api .
-docker run -d -p 80:80 --name sales sales-api
+docker run -d -p 3000:3000 --name sales sales-api
 ```
 
 #### Prerequisites
