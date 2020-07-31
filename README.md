@@ -23,11 +23,6 @@ MongoDB in Local
 service mongod start
 ```
 
-MongoDB docker image
-```bash
-docker run -p 27017:27017 --env MONGO_INITDB_ROOT_USERNAME=root --env MONGO_INITDB_ROOT_PASSWORD=rootpassword mongo:latest
-```
-
 #### Installation
 
 Install Dependencies
