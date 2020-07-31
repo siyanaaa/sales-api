@@ -1,11 +1,12 @@
-import {SalesApiApplication} from '../..';
 import {
-  createRestAppClient,
+  Client, createRestAppClient,
   givenHttpServerConfig,
-  Client,
+  TestSandbox
 } from '@loopback/testlab';
+import path from 'path';
+import {SalesApiApplication} from '../..';
 
-export async function setupApplication(): Promise<AppWithClient> {
+export async function setupApplication(fileStorageDirectory?: string): Promise<AppWithClient> {
   const restConfig = givenHttpServerConfig({
     // Customize the server configuration here.
     // Empty values (undefined, '') will be ignored by the helper.
@@ -16,6 +17,7 @@ export async function setupApplication(): Promise<AppWithClient> {
 
   const app = new SalesApiApplication({
     rest: restConfig,
+    fileStorageDirectory,
   });
 
   await app.boot();
@@ -29,4 +31,10 @@ export async function setupApplication(): Promise<AppWithClient> {
 export interface AppWithClient {
   app: SalesApiApplication;
   client: Client;
+}
+
+export function getSandbox() {
+  // dist/.sandbox/<a unique temporary subdir>
+  const sandbox = new TestSandbox(path.resolve(__dirname, '../../.sandbox'));
+  return sandbox;
 }
