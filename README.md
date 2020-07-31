@@ -5,6 +5,7 @@
 #### Using Docker
 
 ```bash
+docker run -p 27017:27017 --env MONGO_INITDB_ROOT_USERNAME=root --env MONGO_INITDB_ROOT_PASSWORD=rootpassword mongo:latest
 docker build -t sales-api .
 docker run -d -p 3000:3000 --name sales sales-api
 ```
@@ -19,7 +20,7 @@ nvm use 12.
 #### MongoDB as datasource
 MongoDB in Local
 ```bash
-yarn
+service mongod start
 ```
 
 MongoDB docker image
