@@ -5,7 +5,6 @@
 #### Using Docker
 
 ```bash
-docker run -p 27017:27017 --env MONGO_INITDB_ROOT_USERNAME=root --env MONGO_INITDB_ROOT_PASSWORD=rootpassword mongo:latest
 docker build -t sales-api .
 docker run -d -p 3000:3000 --name sales sales-api
 ```
